@@ -1,8 +1,10 @@
 package models
 
 import (
+	"fmt"
 	"log"
 	"regexp"
+	"time"
 )
 
 func CheckCode(code string) bool {
@@ -20,10 +22,24 @@ func GetLastModified(code string) string {
 	return obj.Events[0].CreationTime
 }
 
-func GetResume(code string) Event {
-	obj := GetTrackingInformation(code)
-	if obj.Events == nil {
-
+func FormatDate(obj Object) string {
+	layout := "2006-01-02T15:04:05"
+	data, err := time.Parse(layout, obj.Events[0].CreationTime)
+	if err != nil {
+		log.Printf("Ocorreu um erro ao coverter a data: %v\n", err)
 	}
-	return obj.Events[0]
+	return data.String()[:19]
+}
+
+func GetResume(name string, code string) (title string, description string) {
+	obj := GetTrackingInformation(code)
+
+	title = fmt.Sprintf("%v - %v", name, code)
+
+	if obj.Events == nil {
+		description = obj.Message
+	} else {
+		description = fmt.Sprintf(obj.ToString())
+	}
+	return title, description
 }
