@@ -1,0 +1,8 @@
+{
+  "discordToken": "Token",
+  "userDB": "User",
+  "passwordDB": "Password",
+  "hostDB": "Host",
+  "portDB": "Port",
+  "nameDB": "Name"
+}
