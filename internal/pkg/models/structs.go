@@ -1,5 +1,7 @@
 package models
 
+import "fmt"
+
 type address struct {
 	City string `json:"cidade"`
 	UF   string `json:"uf"`
@@ -19,9 +21,22 @@ type Event struct {
 }
 
 type Object struct {
-	Events []Event `json:"eventos"`
+	Message string  `json:"mensagem"`
+	Events  []Event `json:"eventos"`
 }
 
 type Objects struct {
 	Objects []Object `json:"objetos"`
+}
+
+func (ad *address) toString() string {
+	return fmt.Sprintf("%v - %v", ad.City, ad.UF)
+}
+
+func (l *localization) toString() string {
+	return fmt.Sprintf("%v: %v", l.Type, l.Address.toString())
+}
+
+func (obj *Object) ToString() string {
+	return fmt.Sprintf("Data: %v\n%v\nStatus: %v\n", FormatDate(*obj), obj.Events[0].Localization.toString(), obj.Events[0].Description)
 }
