@@ -20,6 +20,17 @@ type database struct {
 
 var sqlConn string
 
+var (
+	createTable = `
+CREATE TABLE IF NOT EXISTS package(
+    id SERIAL PRIMARY KEY,
+    user_id VARCHAR(50) NOT NULL,
+    package_name VARCHAR(255) NOT NULL,
+    package_code VARCHAR (50) NOT NULL,
+    last_modified VARCHAR (50)
+);`
+)
+
 func init() {
 	configJson, err := os.Open("config.json")
 	if err != nil {
@@ -35,8 +46,19 @@ func init() {
 
 	json.Unmarshal(configBytes, &config)
 
-	sqlConn = fmt.Sprintf("host= %s user= %s password= %s dbname= %s",
-		config.Host, config.User, config.Password, config.Database)
+	sqlConn = fmt.Sprintf("host= %s port= %s user= %s password= %s dbname= %s",
+		config.Host, config.Port, config.User, config.Password, config.Database)
+
+	db, err := sql.Open("postgres", sqlConn)
+	if err != nil {
+		log.Printf("Ocorreu um erro ao conectar no banco! %s\n", err.Error())
+	}
+	defer db.Close()
+
+	_, err = db.Query(createTable)
+	if err != nil {
+		log.Printf("Ocorreu um erro ao tentar criar a tabela: %v\n", err)
+	}
 }
 
 func DBConnect() *sql.DB {
