@@ -86,25 +86,13 @@ var (
 			name := i.ApplicationCommandData().Options[1].StringValue()
 
 			if !models.CheckCode(code) {
-				err := s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
-					Type: discordgo.InteractionResponseChannelMessageWithSource,
-					Data: &discordgo.InteractionResponseData{
-						Embeds: []*discordgo.MessageEmbed{
-							{
-								Title:       "Erro ao adicionar o pacote!",
-								Description: "O código de rastreio é inválido, verifique se você digitou certo!",
-								Color:       15548997,
-							},
-						},
-					},
-				})
-				if err != nil {
-					log.Printf("Ocorreu um erro ao informar que o código de rastreio é inválido: %v", err)
-				}
+				errorMessage("O código de rastreio é inválido, verifique se você digitou certo!", s, i.Interaction)
 				return
 			}
 			id := database.InsertPackage(i.User.ID, strings.ToUpper(name), strings.ToUpper(code))
-			title, description := models.GetResume(database.SelectByID(id))
+
+			_, name, code = database.SelectByID(id)
+			title, description := models.GetResume(name, code)
 
 			s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
 				Type: discordgo.InteractionResponseChannelMessageWithSource,
@@ -129,16 +117,49 @@ var (
 				privateAlert(s, i.Interaction)
 				return
 			}
-			fmt.Println("Resumo do pacote...")
-			emConstrucao(s, i.Interaction)
+			name := i.ApplicationCommandData().Options[0].StringValue()
+			find, code := database.SelectByName(strings.ToUpper(name))
+			if find {
+				title, description := models.GetResume(name, code)
+				s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
+					Type: discordgo.InteractionResponseChannelMessageWithSource,
+					Data: &discordgo.InteractionResponseData{
+						Embeds: []*discordgo.MessageEmbed{
+							{
+								Title:       title,
+								Description: description,
+								Color:       5763719,
+							},
+						},
+					},
+				})
+			} else {
+				errorMessage("Ocorreu um erro ao tentar encontrar o pacote!", s, i.Interaction)
+			}
 		},
 		"remove": func(s *discordgo.Session, i *discordgo.InteractionCreate) {
 			if i.User == nil {
 				privateAlert(s, i.Interaction)
 				return
 			}
-			fmt.Println("Remover pacote...")
-			emConstrucao(s, i.Interaction)
+			name := i.ApplicationCommandData().Options[0].StringValue()
+
+			if database.DeleteByName(strings.ToUpper(name)) {
+				s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
+					Type: discordgo.InteractionResponseChannelMessageWithSource,
+					Data: &discordgo.InteractionResponseData{
+						Embeds: []*discordgo.MessageEmbed{
+							{
+								Title:       "Pacote excluido!",
+								Description: "Seu pacote foi excluido com sucesso!",
+								Color:       5763719,
+							},
+						},
+					},
+				})
+			} else {
+				errorMessage("Ocorreu um erro ao tentar excluir o pacote!", s, i.Interaction)
+			}
 		},
 		"history": func(s *discordgo.Session, i *discordgo.InteractionCreate) {
 			if i.User == nil {
@@ -190,4 +211,20 @@ func emConstrucao(s *discordgo.Session, i *discordgo.Interaction) {
 	if err != nil {
 		log.Printf("Ocorreu um erro ao mandar o alerta privado: %v", err)
 	}
+}
+
+func errorMessage(description string, s *discordgo.Session, i *discordgo.Interaction) {
+	s.InteractionRespond(i, &discordgo.InteractionResponse{
+		Type: discordgo.InteractionResponseChannelMessageWithSource,
+		Data: &discordgo.InteractionResponseData{
+			Flags: discordgo.MessageFlagsEphemeral,
+			Embeds: []*discordgo.MessageEmbed{
+				{
+					Title:       "Ops, ocorreu um erro!",
+					Description: description,
+					Color:       15548997,
+				},
+			},
+		},
+	})
 }
