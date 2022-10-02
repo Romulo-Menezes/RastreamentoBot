@@ -24,7 +24,7 @@ func InsertPackage(userID string, name string, code string) (id int) {
 	return id
 }
 
-func SelectByID(id int) (name string, code string) {
+func SelectByID(id int) (find bool, name string, code string) {
 	query := `SELECT package_name, package_code FROM package WHERE id = $1`
 	db := DBConnect()
 	defer db.Close()
@@ -32,6 +32,33 @@ func SelectByID(id int) (name string, code string) {
 	err := db.QueryRow(query, id).Scan(&name, &code)
 	if err != nil {
 		log.Printf("Erro ao selecionar o código pelo ID: %v\n", err)
+		return false, "", ""
 	}
-	return name, code
+	return true, name, code
+}
+
+func SelectByName(name string) (find bool, code string) {
+	query := `SELECT package_code FROM package WHERE package_name = $1`
+	db := DBConnect()
+	defer db.Close()
+
+	err := db.QueryRow(query, name).Scan(&code)
+	if err != nil {
+		log.Printf("Erro ao selecionar o código pelo ID: %v\n", err)
+		return false, ""
+	}
+	return true, code
+}
+
+func DeleteByName(name string) bool {
+	query := `DELETE FROM package WHERE package_name = $1`
+	db := DBConnect()
+	defer db.Close()
+
+	_, err := db.Exec(query, name)
+	if err != nil {
+		log.Printf("Erro ao deletar um pacote: %v\n", err)
+		return false
+	}
+	return true
 }
