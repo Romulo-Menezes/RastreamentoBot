@@ -166,8 +166,27 @@ var (
 				privateAlert(s, i.Interaction)
 				return
 			}
-			fmt.Println("Histórico do pacote...")
-			emConstrucao(s, i.Interaction)
+			name := i.ApplicationCommandData().Options[0].StringValue()
+
+			find, code := database.SelectByName(strings.ToUpper(name))
+
+			if find {
+				title, description := models.GetHistory(name, code)
+				s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
+					Type: discordgo.InteractionResponseChannelMessageWithSource,
+					Data: &discordgo.InteractionResponseData{
+						Embeds: []*discordgo.MessageEmbed{
+							{
+								Title:       title,
+								Description: description,
+								Color:       5763719,
+							},
+						},
+					},
+				})
+			} else {
+				errorMessage("Ocorreu um erro ao tentar encontrar o pacote!", s, i.Interaction)
+			}
 		},
 		"list": func(s *discordgo.Session, i *discordgo.InteractionCreate) {
 			if i.User == nil {

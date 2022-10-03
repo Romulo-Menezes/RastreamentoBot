@@ -37,6 +37,6 @@ func (l *localization) toString() string {
 	return fmt.Sprintf("%v: %v", l.Type, l.Address.toString())
 }
 
-func (obj *Object) ToString() string {
-	return fmt.Sprintf("Data: %v\n%v\nStatus: %v\n", FormatDate(*obj), obj.Events[0].Localization.toString(), obj.Events[0].Description)
+func (obj *Object) ToString(i int) string {
+	return fmt.Sprintf("Data: %v\n%v\nStatus: %v", FormatDate(*obj), obj.Events[i].Localization.toString(), obj.Events[i].Description)
 }
