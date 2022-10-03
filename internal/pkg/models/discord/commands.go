@@ -68,10 +68,6 @@ var (
 			Name:        "list",
 			Description: "Lista todos os seus pacotes registrados",
 		},
-		{
-			Name:        "clear-chat",
-			Description: "Limpa seu chat privado",
-		},
 	}
 
 	CommandHandlers = map[string]func(s *discordgo.Session, i *discordgo.InteractionCreate){
@@ -210,13 +206,6 @@ var (
 				errorMessage("Ocorreu um erro ao tentar encontrar seu(s) pacote(s)!", s, i.Interaction)
 			}
 		},
-		"clear-chat": func(s *discordgo.Session, i *discordgo.InteractionCreate) {
-			if i.User == nil {
-				privateAlert(s, i.Interaction)
-				return
-			}
-			emConstrucao(s, i.Interaction)
-		},
 	}
 )
 
@@ -225,19 +214,6 @@ func privateAlert(s *discordgo.Session, i *discordgo.Interaction) {
 		Type: discordgo.InteractionResponseChannelMessageWithSource,
 		Data: &discordgo.InteractionResponseData{
 			Content: "Chama no privado",
-			Flags:   discordgo.MessageFlagsEphemeral,
-		},
-	})
-	if err != nil {
-		log.Printf("Ocorreu um erro ao mandar o alerta privado: %v", err)
-	}
-}
-
-func emConstrucao(s *discordgo.Session, i *discordgo.Interaction) {
-	err := s.InteractionRespond(i, &discordgo.InteractionResponse{
-		Type: discordgo.InteractionResponseChannelMessageWithSource,
-		Data: &discordgo.InteractionResponseData{
-			Content: "Em construção...",
 			Flags:   discordgo.MessageFlagsEphemeral,
 		},
 	})
