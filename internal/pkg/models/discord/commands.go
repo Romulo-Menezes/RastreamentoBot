@@ -3,7 +3,6 @@ package discord
 import (
 	"RastreioBot/internal/pkg/database"
 	"RastreioBot/internal/pkg/models"
-	"fmt"
 	"github.com/bwmarrin/discordgo"
 	"log"
 	"strings"
@@ -68,10 +67,6 @@ var (
 		{
 			Name:        "list",
 			Description: "Lista todos os seus pacotes registrados",
-		},
-		{
-			Name:        "clear-chat",
-			Description: "Limpa seu chat privado",
 		},
 	}
 
@@ -166,23 +161,50 @@ var (
 				privateAlert(s, i.Interaction)
 				return
 			}
-			fmt.Println("Histórico do pacote...")
-			emConstrucao(s, i.Interaction)
+			name := i.ApplicationCommandData().Options[0].StringValue()
+
+			find, code := database.SelectByName(strings.ToUpper(name))
+
+			if find {
+				title, description := models.GetHistory(name, code)
+				s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
+					Type: discordgo.InteractionResponseChannelMessageWithSource,
+					Data: &discordgo.InteractionResponseData{
+						Embeds: []*discordgo.MessageEmbed{
+							{
+								Title:       title,
+								Description: description,
+								Color:       5763719,
+							},
+						},
+					},
+				})
+			} else {
+				errorMessage("Ocorreu um erro ao tentar encontrar o pacote!", s, i.Interaction)
+			}
 		},
 		"list": func(s *discordgo.Session, i *discordgo.InteractionCreate) {
 			if i.User == nil {
 				privateAlert(s, i.Interaction)
 				return
 			}
-			fmt.Println("listar pacotes...")
-			emConstrucao(s, i.Interaction)
-		},
-		"clear-chat": func(s *discordgo.Session, i *discordgo.InteractionCreate) {
-			if i.User == nil {
-				privateAlert(s, i.Interaction)
-				return
+			find, result := database.SelectByUserID(i.User.ID)
+			if find {
+				s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
+					Type: discordgo.InteractionResponseChannelMessageWithSource,
+					Data: &discordgo.InteractionResponseData{
+						Embeds: []*discordgo.MessageEmbed{
+							{
+								Title:       "Seu(s) pacote(s):",
+								Description: result,
+								Color:       5763719,
+							},
+						},
+					},
+				})
+			} else {
+				errorMessage("Ocorreu um erro ao tentar encontrar seu(s) pacote(s)!", s, i.Interaction)
 			}
-			emConstrucao(s, i.Interaction)
 		},
 	}
 )
@@ -192,19 +214,6 @@ func privateAlert(s *discordgo.Session, i *discordgo.Interaction) {
 		Type: discordgo.InteractionResponseChannelMessageWithSource,
 		Data: &discordgo.InteractionResponseData{
 			Content: "Chama no privado",
-			Flags:   discordgo.MessageFlagsEphemeral,
-		},
-	})
-	if err != nil {
-		log.Printf("Ocorreu um erro ao mandar o alerta privado: %v", err)
-	}
-}
-
-func emConstrucao(s *discordgo.Session, i *discordgo.Interaction) {
-	err := s.InteractionRespond(i, &discordgo.InteractionResponse{
-		Type: discordgo.InteractionResponseChannelMessageWithSource,
-		Data: &discordgo.InteractionResponseData{
-			Content: "Em construção...",
 			Flags:   discordgo.MessageFlagsEphemeral,
 		},
 	})

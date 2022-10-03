@@ -39,7 +39,17 @@ func GetResume(name string, code string) (title string, description string) {
 	if obj.Events == nil {
 		description = obj.Message
 	} else {
-		description = fmt.Sprintf(obj.ToString())
+		description = fmt.Sprintf("%v\n", obj.ToString(0))
+	}
+	return title, description
+}
+
+func GetHistory(name string, code string) (title string, description string) {
+	title, description = GetResume(name, code)
+	obj := GetTrackingInformation(code)
+
+	for i := 1; i < len(obj.Events); i++ {
+		description = fmt.Sprintf("%v\n%v\n", description, obj.ToString(i))
 	}
 	return title, description
 }
