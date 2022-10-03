@@ -3,7 +3,6 @@ package discord
 import (
 	"RastreioBot/internal/pkg/database"
 	"RastreioBot/internal/pkg/models"
-	"fmt"
 	"github.com/bwmarrin/discordgo"
 	"log"
 	"strings"
@@ -193,8 +192,23 @@ var (
 				privateAlert(s, i.Interaction)
 				return
 			}
-			fmt.Println("listar pacotes...")
-			emConstrucao(s, i.Interaction)
+			find, result := database.SelectByUserID(i.User.ID)
+			if find {
+				s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
+					Type: discordgo.InteractionResponseChannelMessageWithSource,
+					Data: &discordgo.InteractionResponseData{
+						Embeds: []*discordgo.MessageEmbed{
+							{
+								Title:       "Seu(s) pacote(s):",
+								Description: result,
+								Color:       5763719,
+							},
+						},
+					},
+				})
+			} else {
+				errorMessage("Ocorreu um erro ao tentar encontrar seu(s) pacote(s)!", s, i.Interaction)
+			}
 		},
 		"clear-chat": func(s *discordgo.Session, i *discordgo.InteractionCreate) {
 			if i.User == nil {
