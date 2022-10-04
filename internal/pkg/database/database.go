@@ -10,12 +10,16 @@ import (
 	"os"
 )
 
-type database struct {
+type config struct {
 	Database string `json:"nameDB"`
 	User     string `json:"userDB"`
 	Password string `json:"passwordDB"`
 	Host     string `json:"hostDB"`
 	Port     string `json:"portDB"`
+}
+
+type Database struct {
+	database *sql.DB
 }
 
 var sqlConn string
@@ -42,7 +46,7 @@ func init() {
 		log.Printf("Ocorreu um erro ao converter para bytes! %s\n", err.Error())
 	}
 
-	var config database
+	var config config
 
 	json.Unmarshal(configBytes, &config)
 
@@ -61,10 +65,17 @@ func init() {
 	}
 }
 
-func DBConnect() *sql.DB {
+func New() Database {
 	db, err := sql.Open("postgres", sqlConn)
 	if err != nil {
 		log.Printf("Ocorreu um erro ao conectar no banco! %s\n", err.Error())
 	}
-	return db
+	return Database{database: db}
+}
+
+func (db Database) Close() {
+	err := db.database.Close()
+	if err != nil {
+		log.Printf("Erro ao fechar a conexão com o banco: %v\n", err)
+	}
 }
