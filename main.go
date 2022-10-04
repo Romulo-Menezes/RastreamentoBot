@@ -55,6 +55,7 @@ func main() {
 	}
 
 	defer s.Close()
+	defer discord.DB.Close()
 
 	stop := make(chan os.Signal, 1)
 	signal.Notify(stop, os.Interrupt)

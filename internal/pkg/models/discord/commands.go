@@ -9,6 +9,10 @@ import (
 )
 
 var (
+	DB = database.New()
+)
+
+var (
 	Commands = []*discordgo.ApplicationCommand{
 		{
 			Name:        "add-package",
@@ -84,9 +88,9 @@ var (
 				errorMessage("O código de rastreio é inválido, verifique se você digitou certo!", s, i.Interaction)
 				return
 			}
-			id := database.InsertPackage(i.User.ID, strings.ToUpper(name), strings.ToUpper(code))
+			id := DB.InsertPackage(i.User.ID, strings.ToUpper(name), strings.ToUpper(code))
 
-			_, name, code = database.SelectByID(id)
+			_, name, code = DB.SelectByID(id)
 			title, description := models.GetResume(name, code)
 
 			s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
@@ -113,7 +117,7 @@ var (
 				return
 			}
 			name := i.ApplicationCommandData().Options[0].StringValue()
-			find, code := database.SelectByName(strings.ToUpper(name))
+			find, code := DB.SelectByName(strings.ToUpper(name))
 			if find {
 				title, description := models.GetResume(name, code)
 				s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
@@ -139,7 +143,7 @@ var (
 			}
 			name := i.ApplicationCommandData().Options[0].StringValue()
 
-			if database.DeleteByName(strings.ToUpper(name)) {
+			if DB.DeleteByName(strings.ToUpper(name)) {
 				s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
 					Type: discordgo.InteractionResponseChannelMessageWithSource,
 					Data: &discordgo.InteractionResponseData{
@@ -163,7 +167,7 @@ var (
 			}
 			name := i.ApplicationCommandData().Options[0].StringValue()
 
-			find, code := database.SelectByName(strings.ToUpper(name))
+			find, code := DB.SelectByName(strings.ToUpper(name))
 
 			if find {
 				title, description := models.GetHistory(name, code)
@@ -188,7 +192,7 @@ var (
 				privateAlert(s, i.Interaction)
 				return
 			}
-			find, result := database.SelectByUserID(i.User.ID)
+			find, result := DB.SelectByUserID(i.User.ID)
 			if find {
 				s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
 					Type: discordgo.InteractionResponseChannelMessageWithSource,
